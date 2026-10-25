@@ -1,6 +1,7 @@
 
 import * as THREE from 'three';
 import {loadOriginalWorld} from './original_world.js';
+import {takeOriginalEditorPlaytest} from './editor_handoff.js';
 import {configureModels,replaceWithRealModel,tickNativeModels} from './native_models.js';
 import {WATER,SEED,loadWorld,saveWorld,loadHunter,saveHunter,freshHunter,heightAt,distRoad,clamp,blocked,validWorld} from './world.js';
 import './style.css';
@@ -80,7 +81,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-prev)/
  const t=new THREE.Vector3(hunter.x,heightAt(hunter.x,hunter.z,world)+2,hunter.z);camera.position.set(t.x+Math.sin(yaw)*distance*Math.cos(pitch),t.y+distance*Math.sin(pitch),t.z+Math.cos(yaw)*distance*Math.cos(pitch));camera.lookAt(t);renderer.render(scene,camera)
 }
 window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
-const menu=v=>el('menupanel').hidden=!v;el('menu').onclick=()=>menu(el('menupanel').hidden);el('closeMenu').onclick=()=>menu(false);el('originalEditorBtn').onclick=()=>{window.location.href=new URL('./editor.html',location.href).href};el('saveBtn').onclick=()=>{save();menu(false)};el('resetHunter').onclick=()=>{hunter=freshHunter(world);saveHunter(hunter);menu(false);notice('Hunter recuperado')};el('mapToggle').onclick=()=>el('minimap').classList.toggle('map-big');
+const menu=v=>el('menupanel').hidden=!v;el('menu').onclick=()=>menu(el('menupanel').hidden);el('closeMenu').onclick=()=>menu(false);el('originalEditorBtn').onclick=()=>{saveHunter(hunter);window.location.href=new URL('./editor.html',location.href).href};el('saveBtn').onclick=()=>{save();menu(false)};el('resetHunter').onclick=()=>{hunter=freshHunter(world);saveHunter(hunter);menu(false);notice('Hunter recuperado')};el('mapToggle').onclick=()=>el('minimap').classList.toggle('map-big');
 function builder(v){editor=v;el('builder').hidden=!v;menu(false);if(v)notice('World Builder: elegí herramienta');else save()}el('editToggle').onclick=()=>builder(!editor);el('builderBtn').onclick=()=>builder(true);el('closeBuilder').onclick=()=>builder(false);el('exitBuilder').onclick=()=>builder(false);
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{tool=b.dataset.tool;roadDraft=null;document.querySelectorAll('[data-tool]').forEach(p=>p.classList.toggle('active',p===b));notice('Herramienta: '+tool)});
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
@@ -102,10 +103,11 @@ async function launchOriginalWorld(){
   const manifest=await loadOriginalWorld();
   if(world.roads.length<=3)world.roads=manifest.roads.map(r=>r.map(({x,z})=>({x,z})));
   world.zone={...world.zone,lakes:manifest.zones[0].lakes};
+  const wasEditorPlaytest=takeOriginalEditorPlaytest(world,manifest);if(wasEditorPlaytest){hunter.x=world.spawn.x;hunter.z=world.spawn.z;}
   buildWorld();
   replaceWithRealModel(player.g,'hunter');
   el('builderNote').textContent='Relieve original: '+manifest.zones.length+' zonas, '+manifest.roads.length+' caminos; GLB CC0 cargados del donante.';
-  el('enter').disabled=false;el('enter').textContent='ENTRAR AL MUNDO';
+  el('enter').disabled=false;el('enter').textContent=wasEditorPlaytest?'PROBAR MAPA DEL EDITOR':'ENTRAR AL MUNDO';
   requestAnimationFrame(frame);
  }catch(error){
   console.error('Error G1 REAL',error);
