@@ -13,6 +13,8 @@ const assets={
  'models/props/house_2.glb':'Quaternius Medieval Village — CC0 1.0',
  'models/props/house_3.glb':'Quaternius Medieval Village — CC0 1.0',
  'models/foliage/bush.glb':'Quaternius Stylized Nature MegaKit — CC0 1.0',
+ 'models/foliage/pine_1.glb':'Quaternius Stylized Nature MegaKit — CC0 1.0',
+ 'models/foliage/oak_1.glb':'Quaternius Stylized Nature MegaKit — CC0 1.0',
  'textures/terrain/Grass001_Color.jpg':'ambientCG Grass001 — CC0 1.0'
 };
 let copied=[];
@@ -23,5 +25,9 @@ for(const [p,license] of Object.entries(assets)){
  copied.push({path:p,license,sha256:createHash('sha256').update(fs.readFileSync(to)).digest('hex')});
 }
 fs.mkdirSync(path.join(target,'genesis'),{recursive:true});
+for(const name of ['basis_transcoder.js','basis_transcoder.wasm']){
+ const p=path.join(process.cwd(),'node_modules/three/examples/jsm/libs/basis',name);
+ const dst=path.join(target,'basis',name);fs.mkdirSync(path.dirname(dst),{recursive:true});fs.copyFileSync(p,dst);
+}
 fs.writeFileSync(path.join(target,'genesis/asset-manifest.json'),JSON.stringify({origin:'World of ClaudeCraft',commit:PIN,assets:copied},null,2));
 console.log('CC0 MODELS',copied.map(x=>x.path));

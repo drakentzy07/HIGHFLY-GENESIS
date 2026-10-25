@@ -1,3 +1,4 @@
+import {originalHeight, originalBounds} from './original_world.js';
 
 export const SEED = 20061, WATER=-4.3, STORAGE='highfly:genesis:g1g2:world:v2', HUNTER='highfly:genesis:g1g2:hunter:v2';
 export const SOURCE='levy-street/world-of-claudecraft@9b57e49c9676d75962700f828cc00a50a9a988b5';
@@ -17,6 +18,6 @@ export function loadHunter(w){try{let a=JSON.parse(localStorage.getItem(HUNTER))
 export function saveHunter(h){localStorage.setItem(HUNTER,JSON.stringify(h))}
 const smooth=(a,b,t)=>{t=Math.max(0,Math.min(1,(t-a)/(b-a)));return t*t*(3-2*t)};
 export function distRoad(x,z,roads){let best=1e9;for(const r of roads)for(let i=1;i<r.length;i++){const a=r[i-1],b=r[i],dx=b.x-a.x,dz=b.z-a.z,t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1)));best=Math.min(best,Math.hypot(x-a.x-t*dx,z-a.z-t*dz));}return best}
-export function heightAt(x,z,w){let h=-1.35+3.1*Math.sin(x*.018+SEED)*Math.cos(z*.026)+1.55*Math.sin(x*.061)*Math.sin(z*.043);const hub=Math.hypot(x-w.spawn.x,z-w.spawn.z);const flat=smooth(42,13,hub);h=h*(1-flat)-.7*flat;h-=9*smooth(43,26,Math.hypot(x+92,z-88));const road=1-smooth(2.5,9,distRoad(x,z,w.roads));h=h*(1-.65*road)-.7*.65*road;for(const s of w.stamps){const d=Math.hypot(x-s.x,z-s.z);if(d<s.radius)h+=s.delta*(1-smooth(0,s.radius,d));}return h;}
-export const clamp=(x,z)=>({x:Math.min(176,Math.max(-176,x)),z:Math.min(176,Math.max(-176,z))});
+export function heightAt(x,z,w){const sample=originalHeight(x,z);if(sample!==null){let h=sample;for(const s of w.stamps){const d=Math.hypot(x-s.x,z-s.z);if(d<s.radius)h+=s.delta*(1-smooth(0,s.radius,d));}return h;}let h=-1.35+3.1*Math.sin(x*.018+SEED)*Math.cos(z*.026)+1.55*Math.sin(x*.061)*Math.sin(z*.043);const hub=Math.hypot(x-w.spawn.x,z-w.spawn.z);const flat=smooth(42,13,hub);h=h*(1-flat)-.7*flat;h-=9*smooth(43,26,Math.hypot(x+92,z-88));const road=1-smooth(2.5,9,distRoad(x,z,w.roads));h=h*(1-.65*road)-.7*.65*road;for(const s of w.stamps){const d=Math.hypot(x-s.x,z-s.z);if(d<s.radius)h+=s.delta*(1-smooth(0,s.radius,d));}return h;}
+export const clamp=(x,z)=>{const b=originalBounds();return {x:Math.min((b?.x1??180)-4,Math.max((b?.x0??-180)+4,x)),z:Math.min((b?.z1??180)-4,Math.max((b?.z0??-180)+4,z))}};
 export function blocked(x,z,w){return w.objects.some(o=>o.type!=='wolf'&&o.type!=='npc'&&Math.hypot(x-o.x,z-o.z)<(o.type==='hut'?5:1.2));}
