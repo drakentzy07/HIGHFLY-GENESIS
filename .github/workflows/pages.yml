@@ -1,30 +1,55 @@
-name: HIGHFLY GENESIS Pages
+name: HIGHFLY GENESIS — Real world integration
 on:
   push:
-    branches: [main]
+    branches: [main, genesis/g1-g2-real-integration]
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  group: highfly-genesis-pages-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout HIGHFLY
+        uses: actions/checkout@v4
+      - name: Checkout immutable MIT donor
+        uses: actions/checkout@v4
+        with:
+          repository: levy-street/world-of-claudecraft
+          ref: 9b57e49c9676d75962700f828cc00a50a9a988b5
+          path: _donor
+          persist-credentials: false
+      - name: Node
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-audit --no-fund
-      - run: npm test
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - name: Install highfly build tools
+        run: npm install --no-audit --no-fund && npm install --no-save tsx@4
+      - name: Link allowed runtime libraries
+        run: ln -s "${GITHUB_WORKSPACE}/node_modules" _donor/node_modules
+      - name: G1 terrain from original source
+        run: node --import tsx scripts/bake-original-world.mjs
+      - name: G2 original CC0 models only
+        run: node scripts/copy-cc0-assets.mjs
+      - name: Original editor dependency install
+        run: rm _donor/node_modules && cd _donor && corepack enable && corepack pnpm install --frozen-lockfile --ignore-scripts
+      - name: Patch MIT editor for independent offline Highfly
+        run: node scripts/adapt-original-editor.mjs
+      - name: Automated tests
+        run: npm test
+      - name: Build Pages
+        run: npm run build
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
