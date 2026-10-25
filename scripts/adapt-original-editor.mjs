@@ -8,9 +8,9 @@ edit('app.ts',[
  ["    this.applyViewMode();\n    this.boot3d();","    this.applyViewMode();\n    // HIGHFLY: 3D renderer is lazy; 2D builder is the safe first paint."]
 ]);
 edit('custom_map.ts',[
- ["camps: deepClone(BUILTIN_WORLD.camps as CustomMap['content']['camps']),","camps: []"],
- ["npcs: deepClone(BUILTIN_WORLD.npcs as CustomMap['content']['npcs']),","npcs: {}"],
- ["objects: deepClone(BUILTIN_WORLD.groundObjects as CustomMap['content']['objects']),","objects: []"]
+ ["camps: deepClone(BUILTIN_WORLD.camps as CustomMap['content']['camps']),","camps: [],"],
+ ["npcs: deepClone(BUILTIN_WORLD.npcs as CustomMap['content']['npcs']),","npcs: {},"],
+ ["objects: deepClone(BUILTIN_WORLD.groundObjects as CustomMap['content']['objects']),","objects: [],"]
 ]);
 edit('main.ts',[
  ["camps: clone(CAMPS),","camps: [],"],
