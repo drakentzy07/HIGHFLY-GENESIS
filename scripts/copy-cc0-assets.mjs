@@ -24,6 +24,13 @@ for(const [p,license] of Object.entries(assets)){
  fs.mkdirSync(path.dirname(to),{recursive:true});fs.copyFileSync(from,to);
  copied.push({path:p,license,sha256:createHash('sha256').update(fs.readFileSync(to)).digest('hex')});
 }
+// All hex* meshes come from the KayKit Medieval Hexagon Pack (CC0 1.0).
+for(const file of fs.readdirSync(path.join(source,'models/biome'))){
+ if(!/^hex[a-z]*_[a-z0-9_]+\.glb$/.test(file))continue;
+ const p='models/biome/'+file,from=path.join(source,p),to=path.join(target,p);
+ fs.mkdirSync(path.dirname(to),{recursive:true});fs.copyFileSync(from,to);
+ copied.push({path:p,license:'KayKit Medieval Hexagon Pack — CC0 1.0',sha256:createHash('sha256').update(fs.readFileSync(to)).digest('hex')});
+}
 fs.mkdirSync(path.join(target,'genesis'),{recursive:true});
 for(const name of ['basis_transcoder.js','basis_transcoder.wasm']){
  const p=path.join(process.cwd(),'node_modules/three/examples/jsm/libs/basis',name);

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import {loadOriginalWorld} from './original_world.js';
 import {takeOriginalEditorPlaytest} from './editor_handoff.js';
-import {configureModels,replaceWithRealModel,tickNativeModels} from './native_models.js';
+import {configureModels,replaceWithRealModel,replaceWithOriginalBuilding,tickNativeModels} from './native_models.js';
 import {WATER,SEED,loadWorld,saveWorld,loadHunter,saveHunter,freshHunter,heightAt,distRoad,clamp,blocked,validWorld} from './world.js';
 import './style.css';
 const el=id=>document.getElementById(id);
@@ -40,6 +40,7 @@ function buildWorld(){
  for(const road of world.roads){if(road.length<2)continue;const pts=road.map(p=>new THREE.Vector3(p.x,heightAt(p.x,p.z,world)+.18,p.z));const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.CatmullRomCurve3(pts).getPoints(75)),new THREE.LineBasicMaterial({color:0xe0c98c}));roadGroup.add(line)}
  let seed=SEED;const rng=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296};
  for(let i=0;i<100;i++){let x=terrainCenter.x-158+316*rng(),z=terrainCenter.z-158+316*rng();if(Math.hypot(x-world.spawn.x,z-world.spawn.z)<30||Math.hypot(x+92,z-88)<40||distRoad(x,z,world.roads)<9||heightAt(x,z,world)<WATER+.3)continue;const m=objMesh({type:i%3===0?'oak':'tree',x,z});objectGroup.remove(m);treeGroup.add(m);m.scale.setScalar(.7+rng()*.6)}
+ for(const b of (world.originalBuildings||[])){if(Math.abs(b.x-terrainCenter.x)>190||Math.abs(b.z-terrainCenter.z)>190)continue;const g=group();g.position.set(b.x,heightAt(b.x,b.z,world),b.z);objectGroup.add(g);replaceWithOriginalBuilding(g,b);}
  for(const o of world.objects){const m=objMesh(o);if(o.type==='wolf'&&!wolf)wolf={mesh:m,x:o.x,z:o.z,homeX:o.x,homeZ:o.z};if(o.type==='npc'&&!guide)guide=o;}
  const total=world.objects.length;el('builderNote').textContent=total+' objetos, '+world.stamps.length+' cambios de terreno, '+world.roads.length+' caminos. Relieve: motor original ClaudeCraft; modelos: CC0 KayKit/Quaternius';
  updateMinimap();
@@ -103,6 +104,7 @@ async function launchOriginalWorld(){
   const manifest=await loadOriginalWorld();
   if(world.roads.length<=3)world.roads=manifest.roads.map(r=>r.map(({x,z})=>({x,z})));
   world.zone={...world.zone,lakes:manifest.zones[0].lakes};
+  world.originalBuildings=(manifest.propCoordinates?.buildings||[]).filter(b=>b&&typeof b.assetId==='string'&&/^\/?models\/biome\/hex[a-z]*_[a-z0-9_]+\.glb$/.test(b.assetId)&&Number.isFinite(b.x)&&Number.isFinite(b.z));
   const wasEditorPlaytest=takeOriginalEditorPlaytest(world,manifest);if(wasEditorPlaytest){hunter.x=world.spawn.x;hunter.z=world.spawn.z;}
   buildWorld();
   replaceWithRealModel(player.g,'hunter');

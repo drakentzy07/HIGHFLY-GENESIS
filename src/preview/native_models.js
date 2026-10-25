@@ -53,6 +53,16 @@ export async function replaceWithRealModel(group,type){
   return true;
  }catch(e){console.warn('GLB CC0 no cargado:',type,e);return false;}
 }
+export function replaceWithOriginalBuilding(group,b){
+ const id=String(b.assetId||'').replace(/^\/+/,'');
+ if(!/^models\/biome\/hex[a-z]*_[a-z0-9_]+\.glb$/.test(id))return false;
+ if(!Number.isFinite(b.x)||!Number.isFinite(b.z))return false;
+ const key='worldbuilding:'+id+':'+Number(b.height||6).toFixed(1);
+ sources[key]=[id,Math.min(20,Math.max(2,Number(b.height)||6))];
+ group.rotation.y=Number(b.rot)||0;
+ replaceWithRealModel(group,key);
+ return true;
+}
 export function tickNativeModels(dt,walking=false,striking=false){
  for(let i=actors.length-1;i>=0;i--){
   const a=actors[i];if(!a.group.parent){a.mixer.stopAllAction();actors.splice(i,1);continue}
