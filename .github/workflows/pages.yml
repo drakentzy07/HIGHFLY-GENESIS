@@ -36,7 +36,7 @@ jobs:
       - name: G2 original CC0 models only
         run: node scripts/copy-cc0-assets.mjs
       - name: Original editor dependency install
-        run: corepack enable && corepack pnpm install --dir _donor --frozen-lockfile --ignore-scripts
+        run: rm _donor/node_modules && cd _donor && corepack enable && corepack pnpm install --frozen-lockfile --ignore-scripts
       - name: Patch MIT editor for independent offline Highfly
         run: node scripts/adapt-original-editor.mjs
       - name: Automated tests
